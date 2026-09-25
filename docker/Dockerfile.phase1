@@ -1,0 +1,17 @@
+FROM vllm/vllm-openai:glm53-flash-arm64-cu130@sha256:905c02933be6021301db2dc284e24e3727467aa3a0f63b41d609885778a07bce
+ARG EXLLAMAV3_COMMIT=e648f1a131365aae15920073e761a3fa5a527654
+ENV TORCH_CUDA_ARCH_LIST=12.1a FLASHINFER_CUDA_ARCH_LIST=12.1a MAX_JOBS=8
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=/usr/local/cuda/bin:${PATH}
+COPY build/context/patch_exl3_ext_aarch64.py /opt/recipe/patch_exl3_ext_aarch64.py
+RUN mkdir -p /opt/exllamav3-source && curl -fLsS "https://github.com/turboderp-org/exllamav3/archive/${EXLLAMAV3_COMMIT}.tar.gz" | tar -xz -C /opt/exllamav3-source --strip-components=1
+RUN python3 /opt/recipe/patch_exl3_ext_aarch64.py /opt/exllamav3-source/exllamav3/exllamav3_ext
+RUN CPATH=/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include pip install --no-deps --no-build-isolation /opt/exllamav3-source
+RUN python3 -c "import torch, exllamav3_ext; print(exllamav3_ext.__file__)"
+COPY build/context/mla_0.py build/context/mla_1.py /opt/recipe/
+RUN python3 /opt/recipe/mla_0.py && python3 /opt/recipe/mla_1.py
+COPY build/context/exl3.py /opt/recipe/exl3.py
+COPY build/context/LICENSES /opt/recipe/LICENSES
+COPY pyproject.toml /opt/recipe/plugin/pyproject.toml
+COPY src /opt/recipe/plugin/src
+RUN pip install --no-deps --no-build-isolation /opt/recipe/plugin

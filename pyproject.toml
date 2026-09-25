@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "glm53-spark-recipe"
+version = "0.1.0"
+requires-python = ">=3.12"
+license = "MIT"
+description = "Pinned EXL3 serving integration for two DGX Spark nodes"
+
+[project.entry-points."vllm.general_plugins"]
+glm53_exl3 = "glm53_spark:register"
+
+[tool.setuptools.packages.find]
+where = ["src"]

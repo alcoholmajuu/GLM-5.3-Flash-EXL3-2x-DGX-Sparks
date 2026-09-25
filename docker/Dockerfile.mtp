@@ -1,0 +1,19 @@
+# MTP serving image. Rebased on phase1 (no DFlash layer): MTP-best serving
+# was verified on an image that also contained the DFlash layer, so rebuild
+# then re-run bench/run_stream.py smoke before quoting performance.
+ARG BASE_IMAGE=vllm/vllm-openai:glm53-flash-arm64-cu130@sha256:905c02933be6021301db2dc284e24e3727467aa3a0f63b41d609885778a07bce
+FROM ${BASE_IMAGE}
+# Phase1 steps (Mia pre-cutoff Dockerfile RUN blocks for MLA/KDA + one-spark
+# EXL3 loader) are assumed baked into the phase1 image; see README.md.
+ENV TORCH_CUDA_ARCH_LIST=12.1a MAX_JOBS=8 EXL3_INT8_GEMV=2
+COPY build/exllamav3-1.5.0.tar.gz /opt/recipe/exllamav3-1.5.0.tar.gz
+COPY build/context/patch_exl3_ext_aarch64.py /opt/recipe/patch_exl3_ext_aarch64.py
+COPY scripts/patch_exl3_v15_cpu.py /opt/recipe/patch_exl3_v15_cpu.py
+RUN mkdir -p /opt/exllamav3-v15 && tar -xzf /opt/recipe/exllamav3-1.5.0.tar.gz -C /opt/exllamav3-v15 --strip-components=1
+RUN python3 /opt/recipe/patch_exl3_ext_aarch64.py /opt/exllamav3-v15/exllamav3/exllamav3_ext && python3 /opt/recipe/patch_exl3_v15_cpu.py /opt/exllamav3-v15/exllamav3/exllamav3_ext
+RUN CPATH=/usr/local/lib/python3.12/dist-packages/nvidia/cu13/include pip install --no-deps --no-build-isolation --force-reinstall /opt/exllamav3-v15
+RUN python3 -c "import torch,exllamav3_ext,importlib.metadata; print(importlib.metadata.version('exllamav3')); assert hasattr(exllamav3_ext,'exl3_moe_coop')"
+COPY src /opt/recipe/plugin/src
+RUN pip install --no-deps --no-build-isolation --force-reinstall /opt/recipe/plugin
+COPY build/context/exl3.py /opt/recipe/exl3.py
+ENV GLM53_EXL3_V15=1

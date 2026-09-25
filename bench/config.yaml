@@ -1,0 +1,36 @@
+schema_version: 1
+status: frozen_before_first_inference
+single_stream: true
+concurrency: 1
+output_tokens: 400
+min_tokens: 400
+max_tokens: 400
+ignore_eos: true
+temperature: 0.0
+top_p: 1.0
+seed: 20260924
+thinking:
+  enabled: true
+  request_encoding:
+    chat_template_kwargs:
+      reasoning_effort: max
+  verification: results/phase1/chat_template.json
+prompts: bench/prompts.json
+warmup_runs_per_prompt: 1
+measured_runs_per_prompt: 5
+throughput:
+  primary: decode_output_tokens_after_first_token_divided_by_last_minus_first_token_time
+  also_report: end_to_end_output_tokens_divided_by_request_wall_time
+  japanese_chars: unicode_codepoints_of_emitted_content_same_decode_interval
+  report_reasoning_and_answer_separately: true
+speculation:
+  report_accepted_draft_tokens_per_step: true
+  report_emitted_tokens_per_step_including_bonus: true
+  report_position_unconditional_acceptance: true
+  report_position_conditional_acceptance: true
+  save_raw_counters: true
+change_log:
+  - date: '2026-09-24'
+    change: Initial freeze; thinking ON, greedy, exactly 400 generated tokens including reasoning.
+  - date: '2026-09-24'
+    change: Verified actual tokenizer rendering. Pinned reasoning_effort=max (template default), always-on <think> generation prefix; no enable_thinking switch.
