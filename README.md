@@ -12,7 +12,7 @@ at 64k dominates end-to-end. 512k serving fails at engine start
 
 - Two NVIDIA DGX Spark (128GB unified) with IB/RoCE between them, Docker.
 - ~175GB for weights: converted BF16 checkpoint (164GB) + packed sidecars (~6GB).
-- Weights: `<HF repo>` (converted, ready to serve) or regenerate from
+- Weights: `Terra3312/GLM-5.3-Flash-EXL3-MTP` (converted, ready to serve) or regenerate from
   `turboderp/GLM-5.3-Flash-exl3@2a30229e` with `scripts/convert_nonexperts.py`
   plus `scripts/extract_packed_*.py` (hashes in `PINS.json`).
 
