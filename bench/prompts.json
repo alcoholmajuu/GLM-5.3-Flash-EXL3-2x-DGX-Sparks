@@ -1,0 +1,6 @@
+[
+  {"id":"prose_ja_01","category":"prose","language":"ja","prompt":"社内の文書検索システムを導入する担当者向けに、検索結果の正確さとアクセス権限をどう検証すべきか、日本語の散文で具体例を含めて詳しく説明してください。"},
+  {"id":"prose_en_01","category":"prose","language":"en","prompt":"Explain in detailed prose how a small engineering team should investigate intermittent latency in a document search service. Discuss measurements, alternative explanations, and a concrete example."},
+  {"id":"code_01","category":"code","language":"python","prompt":"Write a Python implementation of a bounded LRU cache with get, put, and delete operations, with type annotations and tests for replacement, eviction, and zero capacity. Include a short explanation of its complexity."},
+  {"id":"json_01","category":"json","language":"ja","prompt":"社内文書検索の導入計画をJSONオブジェクトだけで出力してください。キーはproject、phases、risksです。phasesには6段階を含め、各要素にid、name、tasks、acceptance_criteriaを入れてください。risksには5件を含め、各要素にdescription、mitigationを入れてください。内容は日本語で詳しく書いてください。"}
+]
