@@ -31,8 +31,10 @@ Same-config runs vary ±5–10%; ranges above are repeated measurements.
 - 1M needs `gpu-memory-utilization 0.89` (8.83 GiB KV) and leaves thin host
   headroom. Verified boot + short requests; long-prefill stress is ongoing.
 - Agent use: launch with `--prefix-cache` (reuses conversation history
-  across turns). Opencode example: `examples/opencode-vllm.jsonc`
-  (tunnel `ssh -L 8000:127.0.0.1:8000 <rank0>` first, API binds loopback).
+  across turns). Opencode example: `examples/opencode-vllm.jsonc`,
+  Claude Code example: `examples/claude-code-vllm.md`
+  (`scripts/run_claude_code.sh`, same tunnel `ssh -L 8000:127.0.0.1:8000
+  <rank0>` first, API binds loopback).
 
 ## Run
 
