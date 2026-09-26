@@ -36,6 +36,24 @@ Same-config runs vary ±5–10%; ranges above are repeated measurements.
   (`scripts/run_claude_code.sh`, same tunnel `ssh -L 8000:127.0.0.1:8000
   <rank0>` first, API binds loopback).
 
+## Vision (image input, MTP-best intact)
+
+Launch with `--vision`:
+
+```
+scripts/launch_mtp.py --image <digest> --vision --receipt receipts/launch-vision.json --execute
+```
+
+This mounts `chat_template/chat_template_vision.jinja` (sha in `PINS.json`,
+MIT) and passes `--chat-template` plus `--limit-mm-per-prompt '{"image":1}'`.
+Weights are untouched; the vision encoder already ships in the checkpoint.
+Verified: image requests accepted, shapes/colors/positions described
+correctly, tiny-text needle read (`7392`), same-text/different-image outputs
+separated under prefix caching. Caveat: the MTP draft is text-only, so draft
+acceptance dips on image spans (~17%) and recovers on text (~81%) —
+correctness is unaffected (the target verifies), only the image-span speedup
+is thinner.
+
 ## Run
 
 1. `cp .env.example .env` and fill in both nodes, sync this tree to both.

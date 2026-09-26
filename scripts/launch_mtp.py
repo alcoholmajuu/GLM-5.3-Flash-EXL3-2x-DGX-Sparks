@@ -24,6 +24,10 @@ parser.add_argument('--run', default='mtp', help='Unique run name [a-z][a-z0-9_]
 parser.add_argument('--max-model-len', type=int, default=18432)
 parser.add_argument('--gpu-memory-utilization', type=float, default=0.85)
 parser.add_argument('--receipt', type=Path, required=True)
+parser.add_argument('--vision', action='store_true',
+                    help='Enable image input: mount chat_template/chat_template_vision.jinja '
+                         'and pass --chat-template plus --limit-mm-per-prompt {"image":1}. '
+                         'Weights are untouched.')
 parser.add_argument('--execute', action='store_true')
 args = parser.parse_args()
 
@@ -52,6 +56,9 @@ common = ['--served-model-name','glm53-exl3','--tensor-parallel-size','2',
           '--speculative-config',json.dumps({'method':'mtp','num_speculative_tokens':3,
               'draft_tensor_parallel_size':2,'use_local_argmax_reduction':True,
               'draft_sample_method':'greedy'})]
+if args.vision:
+    common += ['--limit-mm-per-prompt',json.dumps({'image':1}),
+               '--chat-template','/vision-test/chat_template_vision.jinja']
 plans = []
 for host,rank,ip in [(RANK1,1,os.environ.get('RANK1_IP',RANK1)),(RANK0,0,os.environ.get('RANK0_IP',RANK0))]:
     name = 'glm53-'+args.run+'-'+('rank1' if rank else 'rank0')
@@ -80,6 +87,8 @@ for host,rank,ip in [(RANK1,1,os.environ.get('RANK1_IP',RANK1)),(RANK0,0,os.envi
                '-v',REMOTE+'/checkpoints/packed-attention-a-original:/packed-attention-a:ro',
                '-v',REMOTE+'/checkpoints/packed-mtp-original:/packed-mtp:ro',
                '-v',REMOTE+'/src/glm53_spark:/usr/local/lib/python3.12/dist-packages/glm53_spark:ro']
+    if args.vision:
+        command += ['-v',REMOTE+'/chat_template/chat_template_vision.jinja:/vision-test/chat_template_vision.jinja:ro']
     for key,value in env.items():
         command += ['-e',key+'='+value]
     command += [args.image,'serve','/model',*common,'--node-rank',str(rank)]
@@ -87,9 +96,12 @@ for host,rank,ip in [(RANK1,1,os.environ.get('RANK1_IP',RANK1)),(RANK0,0,os.envi
     plans.append({'host':host,'rank':rank,'argv':command,'container':name})
 
 receipt = {'utc':datetime.now(timezone.utc).isoformat(),'executed':args.execute,
-           'run':args.run,'plans':plans,
+           'run':args.run,'plans':plans,'vision':bool(args.vision),
            'plugin_sources':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()
                              for p in sorted((ROOT/'src/glm53_spark').glob('*.py'))}}
+if args.vision:
+    receipt['chat_template_vision'] = {
+        'sha256':hashlib.sha256((ROOT/'chat_template/chat_template_vision.jinja').read_bytes()).hexdigest()}
 if args.execute:
     for plan in plans:
         live = subprocess.check_output(['ssh',plan['host'],'docker ps --format '+shlex.quote('{{.Names}}')],
@@ -118,6 +130,12 @@ if args.execute:
             actual = subprocess.check_output(
                 ['ssh',plan['host'],'sha256sum '+shlex.quote(REMOTE+'/'+path)],text=True).split()[0]
             assert actual == digest,(plan['host'],path)
+        if args.vision:
+            actual = subprocess.check_output(
+                ['ssh',plan['host'],'sha256sum '+shlex.quote(REMOTE+'/chat_template/chat_template_vision.jinja')],
+                text=True).split()[0]
+            assert actual == receipt['chat_template_vision']['sha256'],(plan['host'],actual)
+            plan['chat_template_vision_sha256'] = actual
         existing = subprocess.run(['ssh',plan['host'],'docker container inspect '+plan['container']],
                                   capture_output=True)
         if existing.returncode == 0:

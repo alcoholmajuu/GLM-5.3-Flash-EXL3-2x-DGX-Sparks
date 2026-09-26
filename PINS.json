@@ -52,5 +52,11 @@
     "upstream_pr": 54110,
     "merge_commit": "bc96d76aa9946f3af81fabe508ae396088974b98",
     "file": "build/topk-54110-backport.diff"
+  },
+  "chat_template_vision": {
+    "file": "chat_template/chat_template_vision.jinja",
+    "sha256": "6521043064b6e5e67d79a6ff5643592f77ca08f63c6fdac93dc1a1a7c9629f22",
+    "license": "MIT",
+    "derived_from": "converted checkpoint chat_template.jinja (upstream sha256 41cff9af7b3a86c96751b107a8444f245fbda0bd5320b636a5bb1f7f4ba1a5c3); image/video placeholder branch only; weights untouched"
   }
 }
