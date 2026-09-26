@@ -3,31 +3,46 @@
 MIT recipe serving `turboderp/GLM-5.3-Flash-exl3` (4.05bpw) with vLLM TP=2 and
 native MTP3 speculative decoding plus packed decode sidecars.
 
-Measured (single stream, 1024 output tokens): 16k input code 46.1 / JSON 47.8 /
-Japanese prose 37.8 tok/s. Decode holds to 64k (44.4 / 40.7 / 39.2); TTFT ~80s
-at 64k dominates end-to-end. 512k serving fails at engine start
-(`persistent_topk` oversubscription in FULL graph profiling); 128k starts.
+## Images
 
-## Requirements
+- `alcoholmajuu/glm53-mtp-spark:exl3v15` — clean build (`45a7e480…`).
+  Verified to 128k context.
+- `alcoholmajuu/glm53-mtp-spark:exl3v15-topkfix` (`0267fbe6…`) — same plus
+  the upstream vLLM #54110 backport (`build/topk-54110-backport.diff`).
+  Required for 512k–1M context; identical speed at short context.
 
-- Two NVIDIA DGX Spark (128GB unified) with IB/RoCE between them, Docker.
-- ~175GB for weights: converted BF16 checkpoint (164GB) + packed sidecars (~6GB).
-- Weights: `Terra3312/GLM-5.3-Flash-EXL3-MTP` (converted, ready to serve) or regenerate from
-  `turboderp/GLM-5.3-Flash-exl3@2a30229e` with `scripts/convert_nonexperts.py`
-  plus `scripts/extract_packed_*.py` (hashes in `PINS.json`).
+Pull: `docker pull alcoholmajuu/glm53-mtp-spark:exl3v15-topkfix`
+
+## Measured (single stream, 1024 output tokens)
+
+| input | code | JSON | Japanese prose |
+|---|---|---|---|
+| 4k | 42.9–45.2 | 41.3–44.6 | 36.2–37.3 |
+| 16k | 42.2–47.0 | 41.9–43.2 | 35.9–36.4 |
+| 64k | 44.4 (TTFT ~80s) | 40.7 | 39.2 |
+
+Same-config runs vary ±5–10%; ranges above are repeated measurements.
+At 64k+, TTFT dominates end-to-end (decode holds, prefill is chunked).
+
+## Limits
+
+- 512k needs the topkfix image (GB10 `persistent_topk` grid limit).
+- 1M needs `gpu-memory-utilization 0.89` (8.83 GiB KV) and leaves thin host
+  headroom. Verified boot + short requests; long-prefill stress is ongoing.
 
 ## Run
 
 1. `cp .env.example .env` and fill in both nodes, sync this tree to both.
-2. Build: `docker build -f docker/Dockerfile.phase1 ...` then
-   `docker build -f docker/Dockerfile.mtp ...` (rebuild, then re-smoke).
-3. Convert + packed sidecars (or download), verify with
-   `scripts/finalize_checkpoint.py`.
-4. Launch: `scripts/launch_mtp.py --image <digest> --receipt receipts/launch.json --execute`.
-5. Smoke: `bench/run_stream.py --output /tmp/smoke`.
+2. Weights: `Terra3312/GLM-5.3-Flash-EXL3-MTP` (converted, ready to serve)
+   or regenerate from `turboderp/GLM-5.3-Flash-exl3@2a30229e` with
+   `scripts/convert_nonexperts.py` plus `scripts/extract_packed_*.py`
+   (hashes in `PINS.json`).
+3. Launch: `scripts/launch_mtp.py --image <digest> --receipt receipts/launch.json --execute`.
+4. Smoke: on-node `bench/run_stream.py --output /tmp/smoke` (API binds loopback).
 
 ## Licenses
 
 Recipe code is MIT (`LICENSE`). `build/context/exl3.py` is Apache-2.0,
-vLLM/FlashInfer are Apache-2.0 (not bundled). See `THIRD_PARTY_NOTICES.md`
-and `PINS.json`. Do not relabel Apache material as MIT.
+vLLM/FlashInfer are Apache-2.0 (not bundled). The topk backport is upstream
+vLLM PR #54110 (Apache-2.0). See `THIRD_PARTY_NOTICES.md` and `PINS.json`.
+Do not relabel Apache material as MIT.
