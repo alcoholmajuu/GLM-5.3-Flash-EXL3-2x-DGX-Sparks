@@ -12,6 +12,7 @@ native MTP3 speculative decoding plus packed decode sidecars.
   Required for 512k–1M context; identical speed at short context.
 
 Pull: `docker pull alcoholmajuu/glm53-mtp-spark:exl3v15-topkfix`
+(manifest `sha256:677527b4…`, arm64, ~10.4GB compressed)
 
 ## Measured (single stream, 1024 output tokens)
 
