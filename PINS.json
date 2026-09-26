@@ -42,5 +42,15 @@
     "nccl_max_ctas": 4,
     "kv_cache_dtype": "fp8_ds_mla",
     "max_model_len_default": 18432
+  },
+  "images": {
+    "exl3v15": "sha256:45a7e480f3e5095fa87379eafc6898db789e8155dde8c561059f7bd4719aefd1",
+    "exl3v15_topkfix": "sha256:0267fbe6d26b8b578ec59172058c44c7480d30e1e1a840d52c6e7819eaf9b147",
+    "hub_manifest_topkfix": "sha256:677527b4a6a030b84ea7e878b75d03a7b64e00be2b325deca6846be5d4cfbe4a"
+  },
+  "topk_backport": {
+    "upstream_pr": 54110,
+    "merge_commit": "bc96d76aa9946f3af81fabe508ae396088974b98",
+    "file": "build/topk-54110-backport.diff"
   }
 }

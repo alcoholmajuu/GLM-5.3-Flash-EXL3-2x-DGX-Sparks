@@ -28,8 +28,13 @@ At 64k+, TTFT dominates end-to-end (decode holds, prefill is chunked).
 ## Limits
 
 - 512k needs the topkfix image (GB10 `persistent_topk` grid limit).
+  Build it with `docker/Dockerfile.topkfix` (needs the patched `_C` .so;
+  patch: `build/topk-54110-backport.diff`, upstream vLLM PR #54110).
 - 1M needs `gpu-memory-utilization 0.89` (8.83 GiB KV) and leaves thin host
   headroom. Verified boot + short requests; long-prefill stress is ongoing.
+- Agent use: launch with `--prefix-cache` (reuses conversation history
+  across turns). Opencode example: `examples/opencode-vllm.jsonc`
+  (tunnel `ssh -L 8000:127.0.0.1:8000 <rank0>` first, API binds loopback).
 
 ## Run
 

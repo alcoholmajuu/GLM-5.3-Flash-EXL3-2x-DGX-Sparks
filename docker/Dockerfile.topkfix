@@ -1,0 +1,6 @@
+# Topk-fix layer. Apply on top of the clean exl3v15 image.
+# Requires vllm/_C_stable_libtorch.abi3.so built from pinned vLLM
+# (PINS.json) with build/topk-54110-backport.diff applied; see README.
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+COPY _C_stable_libtorch.abi3.so /usr/local/lib/python3.12/dist-packages/vllm/_C_stable_libtorch.abi3.so
