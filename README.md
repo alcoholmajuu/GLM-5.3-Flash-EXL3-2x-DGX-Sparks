@@ -20,10 +20,8 @@ Pull: `docker pull alcoholmajuu/glm53-mtp-spark:exl3v15-topkfix`
 |---|---|---|---|
 | 4k | 42.9–45.2 | 41.3–44.6 | 36.2–37.3 |
 | 16k | 42.2–47.0 | 41.9–43.2 | 35.9–36.4 |
-| 64k | 44.4 (TTFT ~80s) | 40.7 | 39.2 |
 
 Same-config runs vary ±5–10%; ranges above are repeated measurements.
-At 64k+, TTFT dominates end-to-end (decode holds, prefill is chunked).
 
 ## Limits
 
